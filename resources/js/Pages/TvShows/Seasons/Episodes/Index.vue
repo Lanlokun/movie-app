@@ -3,7 +3,7 @@
 
         <template #header>
             <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-                Tv SHow Index
+                Episodes Index
             </h2>
         </template>
 
@@ -13,14 +13,14 @@
                     <div class="w-full flex mb-4 p-2 justify-end">
                         <form class="flex space-x-4 shadow bg-white rounded-md m-2 p-2">
                             <div class="p-1 flex items-center">
-                                <label for="tmdb_id_g" class="block text-sm font-medium text-gray-700 mr-4">Tv Show Tmdb Id</label>
+                                <label for="tmdb_id_g" class="block text-sm font-medium text-gray-700 mr-4">Episode N</label>
                                 <div class="relative rounded-md shadow-sm">
-                                    <input v-model="tvShowTMDBId" id="tmdb_id_g" name="tmdb_id_g"
-                                           class="px-3 py-2 border border-gray-300 rounded" placeholder="Tv ID" />
+                                    <input v-model="episodeNumber" id="tmdb_id_g" name="tmdb_id_g"
+                                           class="px-3 py-2 border border-gray-300 rounded" placeholder="Episode Number" />
                                 </div>
                             </div>
                             <div class="p-1">
-                                <button type="button" @click="generateTvShow"
+                                <button type="button" @click="generateEpisode"
                                         class="inline-flex items-center justify-center py-2 px-4 border border-transparent text-base leading-6 font-medium rounded-md text-white bg-green-600 hover:bg-green-500 focus:outline-none focus:border-indigo-700 focus:shadow-outline-indigo active:bg-green-700 transition duration-150 ease-in-out disabled:opacity-50">
                                     <span>Generate</span>
                                 </button>
@@ -66,25 +66,33 @@
                             <template #tableHead>
                                 <TableHead>Name</TableHead>
                                 <TableHead>Slug</TableHead>
-                                <TableHead>Created Year</TableHead>
-                                <TableHead>Poster</TableHead>
-                                <TableHead>Visits</TableHead>
+                                <TableHead>Public</TableHead>
+                                <TableHead>Episode N</TableHead>
                                 <TableHead>Manage</TableHead>
 
                             </template>
 
-                            <TableRow v-for="tv_show in tv_shows.data" :key="tv_show.id">
-                                <TableData>{{ tv_show.name }}</TableData>
-                                <TableData>{{ tv_show.slug }}</TableData>
-                                <TableData>{{ tv_show.created_year }}</TableData>
-                                <TableData>{{ tv_show.poster_path }}</TableData>
-                                <TableData>{{ tv_show.visits }}</TableData>
+                            <TableRow v-for="episode in episodes.data" :key="episode.id">
+                                <TableData>{{ episode.name }}</TableData>
+                                <TableData>{{ episode.slug }}</TableData>
+                                <TableData>
+
+                                     <span v-if="episode.is_public" class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                                        Published
+                                    </span>
+                                    <span v-else class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">
+                                        UnPublished
+                                    </span>
+                                </TableData>
+                                <TableData>
+                                    {{ episode.episode_number }}
+
+                                </TableData>
                                 <TableData>
 
                                     <div class="flex justify-around">
-                                        <ButtonLink class="bg-blue-500 hover:bg-blue-700" :link="route('admin.seasons.index', tv_show.id)">Seasons</ButtonLink>
-                                        <ButtonLink :link="route('admin.tv-shows.edit', tv_show.id)">Edit</ButtonLink>
-                                        <ButtonLink method="delete" as="button" type="button" class="bg-red-500 hover:bg-red-700" :link="route('admin.tv-shows.destroy', tv_show.id)">Delete</ButtonLink>
+                                        <ButtonLink :link="route('admin.episodes.edit', [tvShow.id,season.id,episode.id])">Edit</ButtonLink>
+                                        <ButtonLink method="delete" as="button" type="button" class="bg-red-500 hover:bg-red-700" :link="route('admin.episodes.destroy', [tvShow.id,season.id, episode.id])">Delete</ButtonLink>
 
                                     </div>
                                 </TableData>
@@ -94,7 +102,7 @@
 
                         <div class="bg-white my-1 py-1">
 
-                            <Pagination :links="tv_shows.links"/>
+                            <Pagination :links="episodes.links"/>
 
 
                         </div>
@@ -108,37 +116,39 @@
 
 <script setup>
 
-import AdminLayout from '../../Layouts/AdminLayout.vue';
+import AdminLayout from '@/Layouts/AdminLayout.vue';
 import { Link } from '@inertiajs/inertia-vue3';
-import Pagination from "../../Components/Pagination";
+import Pagination from "@/Components/Pagination";
 import { ref, watch, defineProps } from 'vue';
 import { Inertia } from "@inertiajs/inertia";
-import Table from "../../Components/Table";
-import TableHead from "../../Components/TableHead";
-import TableRow from "../../Components/TableRow";
-import TableData from "../../Components/TableData";
+import Table from "@/Components/Table";
+import TableHead from "@/Components/TableHead";
+import TableRow from "@/Components/TableRow";
+import TableData from "@/Components/TableData";
 import ButtonLink from "@/Components/ButtonLink";
 
 
 const props = defineProps(
     {
-        tv_shows:Object,
-
-        filters:Object
+        tvShow:Object,
+        season:Object,
+        filters:Object,
+        episodes: Object
     });
 
 
 const search = ref(props.filters.search);
 const perPage = ref(5);
-const tvShowTMDBId = ref('');
+const episodeNumber = ref('');
 
 watch(search, value => {
-    Inertia.get('/admin/tv-shows', { search: value }, {preserveState: true, replace:true})
+    Inertia.get(`/admin/tv-shows/${props.tvShow.id}/seasons/${props.season.id}/episodes`, { search: value }, {preserveState: true, replace:true})
 });
 
-function generateTvShow(){
-    Inertia.post('/admin/tv-shows', {tvShowTMDBId: tvShowTMDBId.value}, {
-        onFinish: () => (tvShowIMDBId.value = "")
+
+function generateEpisode(){
+    Inertia.post(`/admin/tv-shows/${props.tvShow.id}/seasons/${props.season.id}/episodes`, {episodeNumber: episodeNumber.value}, {
+        onFinish: () => (episodeNumber.value = "")
     });
 
 }
