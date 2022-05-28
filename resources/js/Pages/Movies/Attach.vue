@@ -35,13 +35,56 @@
                     </div>
 
                     <div class="w-full mb-8 p-6 overflow-hidden bg-white rounded-lg shadow-lg">
+                        <div class="flex space-x-2">
+                            <div v-for="trailer in trailers">
+                                <Link class="px-4 mx-3 my-3 py-2 bg-red-500 hover:bg-red-700 text-white" :href="route('admin.trailer_url.destroy', trailer.id)" method="delete" as="button" type="button"> {{trailer.name}} </Link>
 
-                    Trailer Form
+
+                            </div>
+                        </div>
+                        <form @submit.prevent="submitTrailer">
+                            <div>
+                                <JetLabel for="name" value="Name" />
+                                <JetInput
+                                    id="name"
+                                    v-model="form.name"
+                                    type="text"
+                                    class="mt-1 block w-full"
+                                    required
+                                    autofocus
+                                    autocomplete="name"
+                                />
+                                <div class="text-sm text-red-400" v-if="form.errors.name">{{ form.errors.name }}</div>
+
+                            </div>
+
+
+                            <div class="mt-4">
+                                <JetLabel for="embed_html" value="Embed" />
+                                <textarea
+                                    id="embed_html"
+                                    v-model="form.embed_html"
+                                    type="text"
+                                    class="mt-1 block w-full"
+                                    required
+                                ></textarea>
+                                <div class="text-sm text-red-400" v-if="form.errors.embed_html">{{ form.errors.embed_html }}</div>
+
+                            </div>
+
+                            <div class="flex items-center justify-end mt-4">
+
+                                <JetButton class="ml-4" :class="{ 'opacity-25': form.processing }" :disabled="form.processing">
+                                    Add Trailer
+                                </JetButton>
+                            </div>
+                        </form>
                     </div>
 
                     <div class="w-full mb-8 p-6 overflow-hidden bg-white rounded-lg shadow-lg">
-
-                        Cast  Form
+                        <div>
+                            <multiselect v-model="value" :options="casts"></multiselect>
+                        </div>
                     </div>
 
                     <div class="w-full mb-8 p-6 overflow-hidden bg-white rounded-lg shadow-lg">
@@ -64,36 +107,37 @@ import { ref, watch, defineProps } from 'vue';
 import JetButton from '@/Jetstream/Button.vue';
 import JetInput from '@/Jetstream/Input.vue';
 import JetLabel from '@/Jetstream/Label.vue';
-import JetCheckbox from "@/Jetstream/Checkbox.vue";
-
+import Multiselect from '@vueform/multiselect'
 
 
 const props = defineProps(
     {
         movie:Object,
+        trailers: Array,
+        casts: Array,
+        tags: Array
     });
 
+
+const value = ref ('');
+
+const options = ['list ', 'of', 'options'];
+
 const form = useForm({
-    title: props.movie.title,
-    runtime: props.movie.runtime,
-    lang: props.movie.lang,
-    video_format: props.movie.video_format,
-    rating: props.movie.rating,
-    poster_path: props.movie.poster_path,
-    backdrop_path: props.movie.backdrop_path,
-    overview: props.movie.overview,
-    is_public:props.movie.is_public
+    name: '',
+    embed_html: ''
+});
 
-
-})
-
-function submitMovie()
+function submitTrailer()
 {
-    form.put('/admin/movies/' + props.movie.id)
+    form.post(`/admin/movies/${props.movie.id}/add-trailer`, {
+        onSuccess: () => form.reset(),
+    });
 }
 
 
 </script>
+<style src="@vueform/multiselect/themes/default.css"></style>
 
 <style scoped>
 

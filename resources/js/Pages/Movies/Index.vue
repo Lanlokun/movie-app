@@ -56,9 +56,25 @@
 
                         <Table>
                             <template #tableHead>
-                                <TableHead>tile</TableHead>
+                                <TableHead class="cursor-pointer" @click="sort('title')">
+                                    <div class="flex space-x-4 content-center">
+                                        <span>Title</span>
+                                        <svg v-if="movieFilters.column === 'title'  &&  movieFilters.direction === 'desc'" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-indigo-700" fill="none"
+                                             viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                  d="M17 13l-5 5m0 0l-5-5m5 5V6" />
+                                        </svg>
+                                        <svg v-if="movieFilters.column === 'title'  &&  movieFilters.direction === 'asc'" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-indigo-700" fill="none"
+                                             viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                  d="M7 11l5-5m0 0l5 5m-5-5v12" />
+                                        </svg>
+                                    </div>
+
+                                </TableHead>
                                 <TableHead>Public</TableHead>
-                                <TableHead>Rating </TableHead>
+                                <TableHead @click="sort('visits')">Visits</TableHead>
+                                <TableHead @click="sort('rating')">Rating </TableHead>
                                 <TableHead>Poster</TableHead>
                                 <TableHead>Manage</TableHead>
 
@@ -72,6 +88,7 @@
                                     <span v-else class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">
                                         UnPublished
                                     </span></TableData>
+                                <TableData>{{ movie.visits }}</TableData>
                                 <TableData>{{ movie.rating }}</TableData>
                                 <TableData><img class="h-12 w-12 rounded" :src="`https://www.themoviedb.org/t/p/w220_and_h330_face/${movie.poster_path}`"></TableData>
                                 <TableData>
@@ -106,19 +123,20 @@
 import AdminLayout from '../../Layouts/AdminLayout.vue';
 import { Link } from '@inertiajs/inertia-vue3';
 import Pagination from "../../Components/Pagination";
-import { ref, watch, defineProps } from 'vue';
+import {ref, watch, defineProps, reactive} from 'vue';
 import { Inertia } from "@inertiajs/inertia";
 import Table from "../../Components/Table";
 import TableHead from "../../Components/TableHead";
 import TableRow from "../../Components/TableRow";
 import TableData from "../../Components/TableData";
 import ButtonLink from "@/Components/ButtonLink";
+import { throttle , pickBy } from "lodash";
 
 
 const props = defineProps(
     {
         movies:Object,
-        filters:Object
+        filters:Object,
     });
 
 
@@ -129,6 +147,17 @@ const movieTMDBId = ref('');
 watch(search, value => {
     Inertia.get('/admin/movies', { search: value }, {preserveState: true, replace:true})
 });
+
+const movieFilters = reactive({
+    column: props.filters.column,
+    direction: props.filters.direction
+})
+
+function sort(column)
+{
+    movieFilters.column = column;
+    movieFilters.direction = movieFilters.direction ===  'asc' ? 'desc' : 'asc';
+}
 
 function generateMovie(){
     Inertia.post('/admin/movies', {movieTMDBId: movieTMDBId.value}, {

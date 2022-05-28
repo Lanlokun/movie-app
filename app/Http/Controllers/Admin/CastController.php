@@ -37,7 +37,7 @@ class CastController extends Controller
                 'tmdb_id' => $tmdb_cast['id'],
                 'name'    => $tmdb_cast['name'],
                 'slug'    => Str::slug($tmdb_cast['name']),
-                'poster_path' => $tmdb_cast['poster_path']
+                'poster_path' => $tmdb_cast['poster_path'],
             ]);
             return redirect(route('admin.casts.index'))->with('flash.banner', 'Cast Created');
 
